@@ -1,0 +1,132 @@
+CREATE PROCEDURE SBO_SP_TransactionNotification_Backup
+(
+	in object_type nvarchar(20), 				-- SBO Object Type
+	in transaction_type nchar(1),			-- [A]dd, [U]pdate, [D]elete, [C]ancel, C[L]ose
+	in num_of_cols_in_key int,
+	in list_of_key_cols_tab_del nvarchar(255),
+	in list_of_cols_val_tab_del nvarchar(255)
+)
+LANGUAGE SQLSCRIPT
+AS--
+-- Return values
+temp_var_0 decimal(19,6);
+temp_var_1 decimal(19,6);
+temp_var_2 decimal(19,6);
+AprlCount int;
+error  int;				-- Result (0 for no error)
+error_message nvarchar (200); 		-- Error string to be displayed
+BaseType NVARCHAR(20);
+Aprlresult NVARCHAR(100);
+ItemCode NVARCHAR(20);
+begin
+
+error := 0;
+error_message := N'Ok';
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+--	ADD	YOUR	CODE	HERE
+
+--- Cost Center and Owner - Purchase Order ----
+IF :object_type = '22' AND (:transaction_type='A' or :transaction_type='U') THEN 
+
+				
+SELECT (SELECT "DocEntry" FROM POR1 
+	 	    WHERE "DocEntry" = :list_of_cols_val_tab_del AND ifnull(POR1."OcrCode3",'')='')
+		INTO temp_var_0 FROM DUMMY;
+		
+SELECT (SELECT POR1."DocEntry" FROM POR1 RIGHT OUTER JOIN OPOR on OPOR."DocEntry"=POR1."DocEntry"
+		LEFT JOIN OACT ON POR1."AcctCode"=OACT."AcctCode"
+ 	    WHERE (OPOR."DocEntry" = :list_of_cols_val_tab_del) AND (ifnull(OPOR."OwnerCode",0)=0)) INTO temp_var_1 FROM DUMMY;
+
+SELECT (SELECT "DocEntry" FROM OPOR 
+	 	    WHERE "DocEntry" = :list_of_cols_val_tab_del AND ifnull(OPOR."U_POtype",'')='')
+		INTO temp_var_2 FROM DUMMY;
+
+
+IF (:temp_var_0 > 0) THEN error := -5001;
+error_message := N'Please Fill In The Cost Centre.!!';
+END IF;
+
+IF (:temp_var_1 > 0) THEN error := -5001;
+error_message := N'Please select owner.';
+END IF;
+IF (:temp_var_2 > 0) THEN error := -5001;
+error_message := N'Please select PO Type.';
+END IF;
+END IF;
+--- Cost Center and Owner - Purchase Request----
+
+IF :object_type = '1470000113' AND (:transaction_type='A' or :transaction_type='U') THEN 
+
+SELECT (SELECT "DocEntry" FROM PRQ1 
+	 	    WHERE "DocEntry" = :list_of_cols_val_tab_del AND ifnull(PRQ1."OcrCode3",'')='')
+		INTO temp_var_0 FROM DUMMY;--
+
+		
+SELECT (SELECT PRQ1."DocEntry" FROM PRQ1 RIGHT OUTER JOIN OPRQ on OPRQ."DocEntry"=PRQ1."DocEntry"
+		LEFT JOIN OACT ON PRQ1."AcctCode"=OACT."AcctCode"
+ 	    WHERE (OPRQ."DocEntry" = :list_of_cols_val_tab_del) AND (ifnull(OPRQ."OwnerCode",0)=0)) INTO temp_var_1 FROM DUMMY;
+ 	    
+SELECT (SELECT PRQ1."DocEntry" FROM PRQ1 RIGHT OUTER JOIN OPRQ on OPRQ."DocEntry"=PRQ1."DocEntry"
+		LEFT JOIN OACT ON PRQ1."AcctCode"=OACT."AcctCode"
+ 	    WHERE (OPRQ."DocEntry" = :list_of_cols_val_tab_del) AND (ifnull(PRQ1."unitMsr",'')='')) INTO temp_var_2 FROM DUMMY;
+
+IF (:temp_var_0 > 0) THEN error := -5001;
+error_message := N'Please Fill In The Cost Centre.!!';
+END IF;
+
+IF (:temp_var_1 > 0) THEN error := -5001;
+error_message := N'Please select owner.';
+END IF;
+
+IF (:temp_var_2 > 0) THEN error := -5001;
+error_message := N'Please select UOM Name';
+END IF;
+
+END IF;
+
+----------
+---------------------------------CODE TO UPDATE APPROVAL STATUS IN PURCHASE REQUEST---------------------------------------------
+IF :object_type='112' AND (:transaction_type ='A')  THEN
+
+SELECT DISTINCT "BaseType" INTO BaseType FROM "DRF1" WHERE "DocEntry" = :list_of_cols_val_tab_del;
+	IF :BaseType = '1470000113' THEN
+		UPDATE "PRQ1"
+			SET "U_SentFApproval" = 'Yes' 
+		FROM "PRQ1" T1, "DRF1" T2
+		WHERE T1."DocEntry" = T2."BaseEntry" AND T1."LineNum" = T2."BaseLine" 
+		AND T1."ItemCode" = T2."ItemCode" AND T2."DocEntry" = :list_of_cols_val_tab_del;
+	END IF;
+END IF;
+------------------------------------------------------------VALIDATE INVOICE QTY WITH PO QTY--------------------------------------------------------------------
+/** IF :object_type = '18' AND (:transaction_type = 'A' or :transaction_type = 'U')  THEN
+
+	SELECT TOP 1 "ItemCode"  INTO ItemCode
+	FROM (SELECT  B."DocEntry",B."ItemCode",SUM(A."Quantity") AS "InvQty",B."LineNum",SUM(B."Quantity") "POQty",
+		  SUM(A."Quantity") + (SUM(A."Quantity") * (5 / 100)) "CalcQty"
+		  FROM "PCH1" A
+		  LEFT OUTER JOIN "POR1" B ON B."DocEntry" = A."BaseEntry" AND B."ObjType" = A."BaseType" AND B."LineNum" = A."BaseLine"
+		  WHERE A."DocEntry" = :list_of_cols_val_tab_del
+		  GROUP BY B."DocEntry",B."ItemCode",B."LineNum"
+	) TAB
+	WHERE "CalcQty" > "POQty"
+	GROUP BY "ItemCode";
+	
+	IF :ItemCode <> '' THEN
+		error := 1;
+		error_message := 'Invoice Quantity is greater than PO quantity/Check quantity for Item ' || :ItemCode ;
+	END IF;
+
+END IF; **/
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+-- Select the return values
+select :error, :error_message FROM dummy;
+
+end;

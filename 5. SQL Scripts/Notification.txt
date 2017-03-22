@@ -1,0 +1,160 @@
+
+drop procedure SBO_SP_TransactionNotification;
+CREATE PROCEDURE SBO_SP_TransactionNotification
+(
+	in object_type nvarchar(20), 				-- SBO Object Type
+	in transaction_type nchar(1),			-- [A]dd, [U]pdate, [D]elete, [C]ancel, C[L]ose
+	in num_of_cols_in_key int,
+	in list_of_key_cols_tab_del nvarchar(255),
+	in list_of_cols_val_tab_del nvarchar(255)
+)
+LANGUAGE SQLSCRIPT
+AS--
+-- Return values
+temp_var_0 decimal(19,6);
+temp_var_1 decimal(19,6);
+temp_var_2 decimal(19,6);
+AprlCount int;
+error  int;				-- Result (0 for no error)
+error_message nvarchar (200); 		-- Error string to be displayed
+BaseType NVARCHAR(20);
+Aprlresult NVARCHAR(100);
+ItemCode NVARCHAR(20);
+
+--START PO VS AP INVOICE
+loop1 integer;
+Cnt integer;
+temp_var_00 int;
+CurrQty decimal(19,6);
+SumQty decimal(19,6);
+POQty decimal(19,6);
+BaseEntry int;
+BaseLine int;
+
+-- END PO VS AP INVOICE
+
+begin
+
+error := 0;
+error_message := N'Ok';
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+--	ADD	YOUR	CODE	HERE
+
+--- Cost Center and Owner - Purchase Order ----
+IF :object_type = '22' AND (:transaction_type='A' or :transaction_type='U') THEN 
+
+				
+SELECT (SELECT "DocEntry" FROM POR1 
+	 	    WHERE "DocEntry" = :list_of_cols_val_tab_del AND ifnull(POR1."OcrCode3",'')='')
+		INTO temp_var_0 FROM DUMMY;
+		
+SELECT (SELECT POR1."DocEntry" FROM POR1 RIGHT OUTER JOIN OPOR on OPOR."DocEntry"=POR1."DocEntry"
+		LEFT JOIN OACT ON POR1."AcctCode"=OACT."AcctCode"
+ 	    WHERE (OPOR."DocEntry" = :list_of_cols_val_tab_del) AND (ifnull(OPOR."OwnerCode",0)=0)) INTO temp_var_1 FROM DUMMY;
+
+SELECT (SELECT "DocEntry" FROM OPOR 
+	 	    WHERE "DocEntry" = :list_of_cols_val_tab_del AND ifnull(OPOR."U_POtype",'')='')
+		INTO temp_var_2 FROM DUMMY;
+
+
+IF (:temp_var_0 > 0) THEN error := -5001;
+error_message := N'Please Fill In The Cost Centre.!!';
+END IF;
+
+IF (:temp_var_1 > 0) THEN error := -5001;
+error_message := N'Please select owner.';
+END IF;
+IF (:temp_var_2 > 0) THEN error := -5001;
+error_message := N'Please select PO Type.';
+END IF;
+END IF;
+--- Cost Center and Owner - Purchase Request----
+
+IF :object_type = '1470000113' AND (:transaction_type='A' or :transaction_type='U') THEN 
+
+SELECT (SELECT "DocEntry" FROM PRQ1 
+	 	    WHERE "DocEntry" = :list_of_cols_val_tab_del AND ifnull(PRQ1."OcrCode3",'')='')
+		INTO temp_var_0 FROM DUMMY;--
+
+		
+SELECT (SELECT PRQ1."DocEntry" FROM PRQ1 RIGHT OUTER JOIN OPRQ on OPRQ."DocEntry"=PRQ1."DocEntry"
+		LEFT JOIN OACT ON PRQ1."AcctCode"=OACT."AcctCode"
+ 	    WHERE (OPRQ."DocEntry" = :list_of_cols_val_tab_del) AND (ifnull(OPRQ."OwnerCode",0)=0)) INTO temp_var_1 FROM DUMMY;
+ 	    
+SELECT (SELECT PRQ1."DocEntry" FROM PRQ1 RIGHT OUTER JOIN OPRQ on OPRQ."DocEntry"=PRQ1."DocEntry"
+		LEFT JOIN OACT ON PRQ1."AcctCode"=OACT."AcctCode"
+ 	    WHERE (OPRQ."DocEntry" = :list_of_cols_val_tab_del) AND (ifnull(PRQ1."unitMsr",'')='')) INTO temp_var_2 FROM DUMMY;
+
+IF (:temp_var_0 > 0) THEN error := -5001;
+error_message := N'Please Fill In The Cost Centre.!!';
+END IF;
+
+IF (:temp_var_1 > 0) THEN error := -5001;
+error_message := N'Please select owner.';
+END IF;
+
+IF (:temp_var_2 > 0) THEN error := -5001;
+error_message := N'Please select UOM Name';
+END IF;
+
+END IF;
+
+----------
+---------------------------------CODE TO UPDATE APPROVAL STATUS IN PURCHASE REQUEST---------------------------------------------
+IF :object_type='112' AND (:transaction_type ='A')  THEN
+
+SELECT DISTINCT "BaseType" INTO BaseType FROM "DRF1" WHERE "DocEntry" = :list_of_cols_val_tab_del;
+	IF :BaseType = '1470000113' THEN
+		UPDATE "PRQ1"
+			SET "U_SentFApproval" = 'Yes' 
+		FROM "PRQ1" T1, "DRF1" T2
+		WHERE T1."DocEntry" = T2."BaseEntry" AND T1."LineNum" = T2."BaseLine" 
+		AND T1."ItemCode" = T2."ItemCode" AND T2."DocEntry" = :list_of_cols_val_tab_del;
+	END IF;
+END IF;
+------------------------------------------------------------START PO VS AP INVOICE--------------------------------------------------------------------
+IF :object_type = '18' AND :transaction_type ='A' THEN 
+
+Cnt := 0;
+
+Select (SELECT count( T0."DocEntry") as "DocEntry" FROM PCH1 T0 WHERE T0."DocEntry" =:list_of_cols_val_tab_del) into loop1 from DUMMY;
+
+WHILE :loop1 > 0
+DO        
+
+Select  (SELECT T0."Quantity"  FROM PCH1 T0 WHERE T0."BaseType" =22 and  T0."VisOrder" =:Cnt and T0."DocEntry"=:list_of_cols_val_tab_del) into CurrQty from DUMMY;
+Select  (SELECT T0."BaseEntry" FROM PCH1 T0 WHERE T0."BaseType" =22 and  T0."VisOrder" =:Cnt and T0."DocEntry"=:list_of_cols_val_tab_del) into BaseEntry from DUMMY;
+Select  (SELECT T0."BaseLine" FROM PCH1 T0 WHERE T0."BaseType" =22 and  T0."VisOrder" =:Cnt and T0."DocEntry"=:list_of_cols_val_tab_del) into BaseLine from DUMMY;
+Select (SELECT ifnull(sum(T0."Quantity") ,0) "Quantity" FROM PCH1 T0 WHERE T0."BaseEntry" =:BaseEntry and  T0."BaseLine" =:BaseLine and T0."BaseType" =22 and T0."LineStatus" = 'O' and T0."DocEntry" <> :list_of_cols_val_tab_del) into SumQty from DUMMY;
+Select (SELECT ifnull(T0."Quantity",0)  "Quantity" FROM POR1 T0 WHERE T0."DocEntry" =:BaseEntry and  T0."LineNum" =:BaseLine) into POQty from DUMMY;
+
+
+if (:CurrQty + :SumQty) >  (:POQty + (:POQty * 0.05)) then
+
+SELECT (SELECT ifnull(count(T0."DocNum"),0)  FROM OPCH T0 WHERE ifnull( T0."U_ForApproval",'N')  ='N' and  T0."DocEntry" =:list_of_cols_val_tab_del)  INTO temp_var_00 FROM DUMMY;
+
+IF :temp_var_00 > 0 THEN 
+error := -1;
+error_message := :CurrQty ||'-' || :SumQty ||'-' || (:POQty + (:POQty * 0.05))  ||'-' ||'Line No ' ||:Cnt+1 || '-You should send to approval! Set ForApproval to Y !';
+BREAK;
+END IF;
+end if;
+
+loop1 := :loop1 - 1;
+Cnt := :Cnt + 1;
+END WHILE;
+END IF;
+
+-------------------------------------------------------------END PO VS AP INVOICE-------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+-- Select the return values
+select :error, :error_message FROM dummy;
+
+end;

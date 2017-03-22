@@ -1,0 +1,42 @@
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\Interop.SAPbobsCOM.dll
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\Interop.SAPbouiCOM.dll
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbproj.ResolveComReference.cache
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.Resources.resources
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbproj.GenerateResource.Cache
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe.config
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Shibin\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe.config
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.Resources.resources
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbproj.GenerateResource.Cache
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe.config
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.Resources.resources
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbproj.GenerateResource.Cache
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Others\Server\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbprojResolveAssemblyReference.cache
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe.config
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.pdb
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.xml
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbprojResolveAssemblyReference.cache
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.Resources.resources
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\Server-GP\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbproj.GenerateResource.Cache
+E:\Abeo Projects\Hotel Grand Pacific\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbprojResolveAssemblyReference.cache

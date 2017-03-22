@@ -1,0 +1,79 @@
+[11/08/2016 17:01:59][      GetSystemIntializeInfo()] Object reference not set to an instance of an object.
+[11/08/2016 17:01:59][                         Main'] 
+[11/09/2016 08:16:02][      GetSystemIntializeInfo()] Object reference not set to an instance of an object.
+[11/09/2016 08:16:02][                         Main'] 
+[11/09/2016 14:38:55][            GetDataViewFromTXT] Index 0 is either negative or above rows count.
+[11/09/2016 14:39:36][            GetDataViewFromTXT] Index 0 is either negative or above rows count.
+[11/09/2016 14:43:24][            GetDataViewFromTXT] Index 0 is either negative or above rows count.
+[11/09/2016 16:42:47][IdentifyTXTFile_JournalVoucher()] Object reference not set to an instance of an object.
+[11/09/2016 16:46:22][IdentifyTXTFile_JournalVoucher()] Object reference not set to an instance of an object.
+[11/09/2016 16:46:22][                         Main'] Object reference not set to an instance of an object.
+[11/09/2016 16:47:02][IdentifyTXTFile_JournalVoucher()] Object reference not set to an instance of an object.
+[11/09/2016 16:47:02][                         Main'] Object reference not set to an instance of an object.
+[11/10/2016 16:31:18][IdentifyTXTFile_JournalVoucher()] Unable to cast object of type 'System.Data.DataColumn' to type 'System.IConvertible'.Couldn't store <> in SNo Column.  Expected type is Int32.
+[11/10/2016 16:31:18][                         Main'] Unable to cast object of type 'System.Data.DataColumn' to type 'System.IConvertible'.Couldn't store <> in SNo Column.  Expected type is Int32.
+[11/10/2016 16:32:46][IdentifyTXTFile_JournalVoucher()] Unable to cast object of type 'System.Data.DataColumn' to type 'System.IConvertible'.Couldn't store <> in SNo Column.  Expected type is Int32.
+[11/10/2016 16:32:46][                         Main'] Unable to cast object of type 'System.Data.DataColumn' to type 'System.IConvertible'.Couldn't store <> in SNo Column.  Expected type is Int32.
+[11/10/2016 16:43:57][IdentifyTXTFile_JournalVoucher()] Input array is longer than the number of columns in this table.
+[11/10/2016 16:43:57][                         Main'] Input array is longer than the number of columns in this table.
+[11/10/2016 16:48:36][            GetDataViewFromTXT] Could not find file 'E:\Abeo Projects\Hotel Grand Pacific\Input\RV161109.csv'.
+[11/10/2016 16:48:36][IdentifyTXTFile_JournalVoucher()] Object reference not set to an instance of an object.
+[11/10/2016 16:48:36][                         Main'] Object reference not set to an instance of an object.
+[11/11/2016 13:23:42][            GetDataViewFromTXT] Object reference not set to an instance of an object.
+[11/11/2016 13:23:42][IdentifyTXTFile_JournalVoucher()] Object reference not set to an instance of an object.
+[11/11/2016 13:23:42][                         Main'] Object reference not set to an instance of an object.
+[11/11/2016 16:15:44][                         Main'] Invalid File Format , preferable format is Csv {,} Delimiter  
+[11/13/2016 19:11:00][        JournalVoucher_Posting] CostingCode4 is neither a DataColumn nor a DataRelation for table .
+[11/13/2016 19:13:23][        JournalVoucher_Posting] CostingCode4 is neither a DataColumn nor a DataRelation for table .
+[11/13/2016 19:14:05][        JournalVoucher_Posting] CostingCode4 is neither a DataColumn nor a DataRelation for table .
+[11/13/2016 19:23:59][        JournalVoucher_Posting] Completed with ERROR ---540000087 - Invalid distribution rule: Foreign
+[11/13/2016 19:23:59][        JournalVoucher_Posting] 540000087 - Invalid distribution rule: Foreign
+[11/13/2016 19:38:03][            GetDataViewFromTXT] Index was outside the bounds of the array.
+[11/13/2016 19:38:03][        JournalVoucher_Posting] Object reference not set to an instance of an object.
+[11/17/2016 15:35:15][        JournalVoucher_Posting] Completed with ERROR ---Update the exchange rate 
+[11/17/2016 15:35:15][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 16:47:49][        JournalVoucher_Posting] Object reference not set to an instance of an object.
+[11/17/2016 17:17:17][        JournalVoucher_Posting] Completed with ERROR ---Update the exchange rate 
+[11/17/2016 17:17:56][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 17:18:26][                         Main'] Update the exchange rate 
+[11/17/2016 17:20:38][        JournalVoucher_Posting] Completed with ERROR ---Update the exchange rate 
+[11/17/2016 17:20:38][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 17:22:23][        JournalVoucher_Posting] Completed with ERROR ---Update the exchange rate 
+[11/17/2016 17:22:23][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 17:26:26][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 17:26:26][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 17:57:14][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 17:57:14][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 17:58:44][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 17:58:44][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 17:59:03][                      MoveFile] Conversion from string "RV161115.csv" to type 'Double' is not valid.
+[11/17/2016 18:01:47][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:01:47][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:02:02][                      MoveFile] Conversion from string "RV161115.csv" to type 'Double' is not valid.
+[11/17/2016 18:03:38][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:03:38][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:06:30][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:06:30][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:07:13][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:07:13][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:13:43][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:13:43][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:15:23][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:15:23][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:29:17][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:29:17][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:32:02][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:32:02][        JournalVoucher_Posting] Update the exchange rate 
+[11/17/2016 18:39:20][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/17/2016 18:39:20][        JournalVoucher_Posting] Update the exchange rate 
+[11/18/2016 13:02:33][                   RoomRevenue] Object reference not set to an instance of an object.
+[11/18/2016 13:37:22][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/18/2016 13:37:22][        JournalVoucher_Posting] Update the exchange rate 
+[11/18/2016 13:47:47][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/18/2016 13:47:47][        JournalVoucher_Posting] Update the exchange rate 
+[11/18/2016 13:51:33][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/18/2016 13:51:33][        JournalVoucher_Posting] Update the exchange rate 
+[11/18/2016 13:54:23][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/18/2016 13:54:23][        JournalVoucher_Posting] Update the exchange rate 
+[11/18/2016 15:00:43][        JournalVoucher_Posting] Completed with ERROR while adding the Journal Voucher ---Update the exchange rate 
+[11/18/2016 15:00:43][        JournalVoucher_Posting] Update the exchange rate 
