@@ -421,7 +421,9 @@ Module modJournalVoucher
                 '    sSAPCC3 = sString(5)
                 'End If
 
-                oDVCC3.RowFilter = "U_Column6='" & sString(5) & "'"
+
+                'oDVCC3.RowFilter = "U_Column6='" & sString(5) & "'"
+                oDVCC3.RowFilter = "U_Column6='" & sString(5).Replace("'", "\") & "'"
                 If oDVCC3.Count > 0 Then
                     sCC3 = oDVCC3.Item(0)(0)
                 Else
@@ -429,15 +431,20 @@ Module modJournalVoucher
                     'sCC3 = String.Empty
                     sCC3 = sString(5)
                 End If
-
+                Dim iString6 As Integer = sString.Length
                 oDVCC4.RowFilter = "PrcName='" & sString(6) & "'"
-                If oDVCC4.Count > 0 Then
-                    sCC4 = oDVCC4.Item(0)(0)
+                If iString6 > 6 Then
+                    If oDVCC4.Count > 0 Then
+                        sCC4 = oDVCC4.Item(0)(0)
+                    Else
+                        oDTDim4.Rows.Add(sString(6))
+                        'sCC4 = String.Empty
+                        sCC4 = sString(6)
+                    End If
                 Else
-                    oDTDim4.Rows.Add(sString(6))
-                    'sCC4 = String.Empty
-                    sCC4 = sString(6)
+                    sCC4 = ""
                 End If
+              
 
                 'Commented on 11 Nov 2016 - Shibin
                 'dDate = DateTime.ParseExact(sString(0), "dd-MMM-yy",
