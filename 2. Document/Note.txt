@@ -1,0 +1,14 @@
+Server Credential:
+
+Team Viewer:
+697694536
+1mse65
+
+Document : Hotel Grand Pacific _ FSD02-Suite8Interface_v2
+
+Console Application:
+
+C: Drive
+
+SAP Interface Folder for live
+SAP Interface-Test for Testing
