@@ -532,7 +532,7 @@ Module modJournalVoucher
                 If Not String.IsNullOrEmpty(odr("Dim4").ToString.Trim) Then
                     oJournalEntry.JournalEntries.Lines.CostingCode4 = odr("Dim4").ToString.Trim 'Project
                 End If
-                oJournalEntry.JournalEntries.Lines.BPLID = 2
+                oJournalEntry.JournalEntries.Lines.BPLID = 1
                 oJournalEntry.JournalEntries.Lines.UserFields.Fields.Item("U_AE_SuiteCode").Value = odr("SuiteCode").ToString.Trim
                 oJournalEntry.JournalEntries.Lines.UserFields.Fields.Item("U_AE_SuiteName").Value = odr("SuiteName").ToString.Trim
                 oJournalEntry.JournalEntries.Lines.Add()
