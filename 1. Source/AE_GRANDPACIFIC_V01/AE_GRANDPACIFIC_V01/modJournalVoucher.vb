@@ -456,16 +456,31 @@ Module modJournalVoucher
                 'Dim monthName = sSplit(1)
                 'Dim monthNumber As String = CStr(DateTime.ParseExact(monthName, "MMM", CultureInfo.CurrentCulture).Month)
 
+
+                '' ''Commented on 26Apr2017
+                'If Not String.IsNullOrEmpty(sString(3)) Then
+                '    dDebit = CDbl(sString(3))
+                'Else
+                '    dDebit = 0
+                'End If
+
+                'If Not String.IsNullOrEmpty(sString(4)) Then
+                '    dCredit = CDbl(sString(4))
+                'Else
+                '    dCredit = 0
+                'End If
+
+
                 If Not String.IsNullOrEmpty(sString(3)) Then
-                    dDebit = CDbl(sString(3))
+                    dCredit = CDbl(sString(3))
                 Else
-                    dDebit = 0
+                    dCredit = 0
                 End If
 
                 If Not String.IsNullOrEmpty(sString(4)) Then
-                    dCredit = CDbl(sString(4))
+                    dDebit = CDbl(sString(4))
                 Else
-                    dCredit = 0
+                    dDebit = 0
                 End If
 
                 'oDTJV.Rows.Add(sDate, sString(1), sString(2), sGLCode, sGLName, dDebit, dCredit, sCC3, "")
