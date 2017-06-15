@@ -112,10 +112,15 @@ Module modJournalVoucher
 
                 ' '' ''Journal Voucher File - RV
                 ' '' ''Journal Voucher File - RD
-                If sFileName.StartsWith("RD") Then
-                    Console.WriteLine("GetDataViewFromTXT() ", sFuncName)
-                    If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("GetDataViewFromTXT() ", sFuncName)
-                    oDVJE = GetDataViewFromCSV(File.FullName, File.Name, oDTGLMAp, oDTDim3, oDTDim4, sErrDesc)
+                'If sFileName.StartsWith("RD") Then
+                '    Console.WriteLine("GetDataViewFromTXT() ", sFuncName)
+                '    If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("GetDataViewFromTXT() ", sFuncName)
+                '    oDVJE = GetDataViewFromCSV(File.FullName, File.Name, oDTGLMAp, oDTDim3, oDTDim4, sErrDesc)
+
+                If sFileName.StartsWith("RM") Then
+                    Console.WriteLine("GetDataViewFromCSV_RM() ", sFuncName)
+                    If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("GetDataViewFromCSV_RM() ", sFuncName)
+                    oDVJE = GetDataViewFromCSV_RM(File.FullName, File.Name, oDTGLMAp, oDTDim3, oDTDim4, sErrDesc)
 
                     ' '' ''Statistic Tables - File - ML
                 ElseIf sFileName.StartsWith("ML") Then
@@ -157,27 +162,27 @@ Module modJournalVoucher
 
                 If oDTGLMAp.Rows.Count > 0 Or oDTDim3.Rows.Count > 0 Or oDTDim4.Rows.Count > 0 Then
                     'Write_Validation(oDTGLMAp, oDTDim3, oDTDim4, File.Name)
-                    
+
                     If oDTGLMAp.Rows.Count > 0 Then
-                        For Each odr As DataRow In oDTGLMAp.Rows                            
+                        For Each odr As DataRow In oDTGLMAp.Rows
                             oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & "mapping G/L account not defined in SAP")
                             WriteToLogFile(odr(0) & "mapping G/L account not defined in SAP", sFuncName)
                         Next
                     End If
 
                     If oDTDim3.Rows.Count > 0 Then
-                        For Each odr As DataRow In oDTDim3.Rows                            
+                        For Each odr As DataRow In oDTDim3.Rows
                             oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code not defined in SAP")
                             WriteToLogFile(odr(0) & " Code not defined in SAP", sFuncName)
                         Next
                     End If
 
-                    If oDTSAPDim3.Rows.Count > 0 Then
-                        For Each odr As DataRow In oDTSAPDim3.Rows
-                            oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code not defined in SAP")
-                            WriteToLogFile(odr(0) & " Code not defined in SAP", sFuncName)
-                        Next
-                    End If
+                    'If oDTSAPDim3.Rows.Count > 0 Then
+                    '    For Each odr As DataRow In oDTSAPDim3.Rows
+                    '        oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code not defined in SAP")
+                    '        WriteToLogFile(odr(0) & " Code not defined in SAP", sFuncName)
+                    '    Next
+                    'End If
 
                     If oDTDim4.Rows.Count > 0 Then
                         For Each odr As DataRow In oDTDim4.Rows
@@ -288,6 +293,239 @@ Module modJournalVoucher
 #End Region
 
 #Region "Journal Voucher"
+    Public Function GetDataViewFromCSV_RM(ByVal CurrFileToUpload As String, ByVal Filename As String, ByRef oDTMAP As DataTable, ByRef oDTDim3 As DataTable, ByRef oDTDim4 As DataTable, ByRef sErrDesc As String) As DataView
+
+        ' **********************************************************************************
+        '   Function    :   GetDataViewFromCSV()
+        '   Purpose     :   This function will upload the data from CSV file to Dataview
+        '   Parameters  :   ByRef CurrFileToUpload AS String 
+        '                       CurrFileToUpload = File Name
+        '   Author      :   JOHN
+        '   Date        :   NOV 2016 
+        ' **********************************************************************************
+
+        Dim dv As DataView
+
+        Dim sFuncName As String = String.Empty
+        sErrDesc = String.Empty
+        Dim dperioddate As Date
+        Dim oSR As StreamReader
+        Dim oDVGLMAP As DataView = Nothing
+        Dim oDTGLMAP As DataTable = Nothing
+        Dim oDTJV As DataTable = Nothing
+        Dim oDTCC3 As DataTable = Nothing
+        Dim oDVCC3 As DataView = Nothing
+        Dim oDTCC4 As DataTable = Nothing
+        Dim oDVCC4 As DataView = Nothing
+        Dim oDTCC5 As DataTable = Nothing
+        Dim oDVCC5 As DataView = Nothing
+        Dim sSQLDim4 As String = String.Empty
+        Dim sSQL As String = String.Empty
+        Dim oRset As SAPbobsCOM.Recordset = Nothing
+        Dim oRsetDim4 As SAPbobsCOM.Recordset = Nothing
+        Dim oRsetDim3 As SAPbobsCOM.Recordset = Nothing
+        Dim sGLCode As String = String.Empty
+        Dim sGLName As String = String.Empty
+        Dim sCC3 As String = String.Empty
+        Dim sSAPCC3 As String = String.Empty
+        Dim sCC4 As String = String.Empty
+        Dim fullMonthName As DateTime
+        Dim dDate As Date
+        Dim sDate As String = String.Empty
+        Dim dDebit As Double = 0.0
+        Dim dCredit As Double = 0.0
+        Dim sSplit() As String
+
+
+        Try
+            sFuncName = "GetDataViewFromCSV_RM"
+            Console.WriteLine("Starting Function", sFuncName)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Starting Function", sFuncName)
+            oRset = p_oCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+            oRsetDim4 = p_oCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+            oRsetDim3 = p_oCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
+            oDTMAP.Clear()
+            oDTDim3.Clear()
+            oDTGLMAP = New DataTable()
+
+            sSQL = "SELECT T0.""Code"", T0.""Name"", T0.""U_SAPAcctCode"", T0.""U_AcctName"" FROM ""@TBLGLMAP""  T0"
+            oRset.DoQuery(sSQL)
+            oDTGLMAP = ConvertRecordset(oRset, sErrDesc)
+            oDVGLMAP = New DataView(oDTGLMAP)
+
+
+            'sSQL = "SELECT T0.""U_CCCode"",T0.""U_Column6"", T0.""U_CostCenterName"" FROM ""@TBLCCMAP""  T0"
+            sSQL = "SELECT T0.""U_SAPCC"" AS ""U_CCCode"",T0.""U_S8_Col6"" AS ""U_Column6"", T0.""U_SAPCC"" AS ""U_CostCenterName"" FROM ""@TBCCMAP_V2""  T0"
+            oDTCC3 = New DataTable
+            oRset.DoQuery(sSQL)
+            oDTCC3 = ConvertRecordset(oRset, sErrDesc)
+            oDVCC3 = New DataView(oDTCC3)
+
+            If sErrDesc.Length > 0 Then
+                Throw New ArgumentException(sErrDesc)
+            End If
+
+
+            'sSQL = "SELECT T0.""PrcCode"", T0.""PrcName"" FROM OPRC T0 WHERE T0.""DimCode""  = 3"
+            'oDTCC5 = New DataTable
+            'oRsetDim3.DoQuery(sSQL)
+            'oDTCC5 = ConvertRecordset(oRsetDim3, sErrDesc)
+            'oDVCC5 = New DataView(oDTCC5)
+
+            'If sErrDesc.Length > 0 Then
+            '    Throw New ArgumentException(sErrDesc)
+            'End If
+
+
+            'sSQLDim4 = "SELECT T0.""PrcCode"", T0.""PrcName"" FROM OPRC T0 WHERE T0.""DimCode""  = 4"
+            sSQLDim4 = "SELECT T0.""U_SAPCC"" AS ""U_CCCode"",T0.""U_S8_Col7"" AS ""U_Column7"", T0.""U_SAPCC"" AS ""U_CostCenterName"" FROM ""@TBCCMAP_V2""  T0"
+            oDTCC4 = New DataTable
+            oRsetDim4.DoQuery(sSQLDim4)
+            oDTCC4 = ConvertRecordset(oRsetDim4, sErrDesc)
+            oDVCC4 = New DataView(oDTCC4)
+
+            If sErrDesc.Length > 0 Then
+                Throw New ArgumentException(sErrDesc)
+            End If
+            'The Datatable to Return
+            oDTJV = New DataTable()
+
+            oDTJV.Columns.Add("Pdate", GetType(String))
+            oDTJV.Columns.Add("SuiteCode", GetType(String))
+            oDTJV.Columns.Add("SuiteName", GetType(String))
+            oDTJV.Columns.Add("GLCode", GetType(String))
+            oDTJV.Columns.Add("GLName", GetType(String))
+            oDTJV.Columns.Add("Debit", GetType(Decimal))
+            oDTJV.Columns.Add("Credit", GetType(Decimal))
+            oDTJV.Columns.Add("Dim3", GetType(String))
+            oDTJV.Columns.Add("Dim4", GetType(String))
+            oDTJV.Columns.Add("SAPDim3", GetType(String))
+
+            'Open the file in a stream reader.
+            oSR = New StreamReader(CurrFileToUpload)
+
+            Dim sText As String
+            Dim sString(-1) As String
+            ''  Dim sDelimiter As String() = {vbTab}
+            'Dim sDelimiter As String() = {";"}
+            Dim sDelimiter As String() = {","}
+
+            While oSR.Peek <> -1
+                sText = oSR.ReadLine()
+                sString = sText.Split(sDelimiter, StringSplitOptions.None) ' "RemoveEmptyEntrie" I am also using the option to remove empty entries a
+                'sString = sText.Split(" ")
+                ' dtEntiry = p_oEntitesDetails.DefaultView.ToTable(True, sString(10))
+                If sString.Length = "1" Then
+                    If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Invalid File Format , preferable format is Txt {Tab} Delimiter  ", sFuncName)
+                    Console.WriteLine("Invalid File Format , preferable format is Csv {,} Delimiter ")
+                    sErrDesc = "Invalid File Format , preferable format is Csv {,} Delimiter  "
+                    Exit While
+                End If
+                oDVGLMAP.RowFilter = "Code='" & sString(1) & "'"
+                If oDVGLMAP.Count > 0 Then
+                    sGLCode = oDVGLMAP.Item(0)(2)
+                    sGLName = oDVGLMAP.Item(0)(3)
+                Else
+                    oDTMAP.Rows.Add(sString(1))
+                    sGLCode = String.Empty
+                    sGLName = String.Empty
+                End If
+
+                'oDVCC5.RowFilter = "PrcName='" & sString(5) & "'"
+                'If oDVCC5.Count > 0 Then
+                '    sSAPCC3 = oDVCC5.Item(0)(0)
+                'Else
+                '    oDTSAPDim3.Rows.Add(sString(5))
+                '    'sCC3 = String.Empty
+                '    sSAPCC3 = sString(5)
+                'End If
+
+
+                'oDVCC3.RowFilter = "U_Column6='" & sString(5) & "'"
+                oDVCC3.RowFilter = "U_Column6='" & sString(5).Replace("'", "\") & "'"
+                If oDVCC3.Count > 0 Then
+                    sCC3 = oDVCC3.Item(0)(0)
+                Else
+                    oDTDim3.Rows.Add(sString(5))
+                    'sCC3 = String.Empty
+                    sCC3 = sString(5)
+                End If
+                Dim iString6 As Integer = sString.Length
+                oDVCC4.RowFilter = "U_Column7='" & sString(6) & "'"
+                If iString6 > 6 Then
+                    If oDVCC4.Count > 0 Then
+                        sCC4 = oDVCC4.Item(0)(0)
+                    Else
+                        oDTDim4.Rows.Add(sString(6))
+                        'sCC4 = String.Empty
+                        sCC4 = sString(6)
+                    End If
+                Else
+                    sCC4 = ""
+                End If
+
+
+                'Commented on 11 Nov 2016 - Shibin
+                'dDate = DateTime.ParseExact(sString(0), "dd-MMM-yy",
+                '                                        CultureInfo.InvariantCulture)
+                'sDate = Format(dDate, "yyyyMMdd")
+
+                sDate = sString(0)
+
+                'Dim monthName = sSplit(1)
+                'Dim monthNumber As String = CStr(DateTime.ParseExact(monthName, "MMM", CultureInfo.CurrentCulture).Month)
+
+
+                '' ''Commented on 26Apr2017
+                'If Not String.IsNullOrEmpty(sString(3)) Then
+                '    dDebit = CDbl(sString(3))
+                'Else
+                '    dDebit = 0
+                'End If
+
+                'If Not String.IsNullOrEmpty(sString(4)) Then
+                '    dCredit = CDbl(sString(4))
+                'Else
+                '    dCredit = 0
+                'End If
+
+
+                If Not String.IsNullOrEmpty(sString(3)) Then
+                    dCredit = CDbl(sString(3))
+                Else
+                    dCredit = 0
+                End If
+
+                If Not String.IsNullOrEmpty(sString(4)) Then
+                    dDebit = CDbl(sString(4))
+                Else
+                    dDebit = 0
+                End If
+
+                'oDTJV.Rows.Add(sDate, sString(1), sString(2), sGLCode, sGLName, dDebit, dCredit, sCC3, "")
+                oDTJV.Rows.Add(sDate, sString(1), sString(2), sGLCode, sGLName, dDebit, dCredit, sCC3, sCC4)
+            End While
+
+            'Console.WriteLine("Del_schema() ", sFuncName)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Completed with SUCCESS ", sFuncName)
+            'Del_schema(p_oCompDef.sInboxDir)
+
+            dv = New DataView(oDTJV)
+            Return dv
+
+        Catch ex As Exception
+
+            Console.WriteLine("Error occured while reading content of  " & ex.Message, sFuncName)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Error occured while reading content of  " & ex.Message, sFuncName)
+            Call WriteToLogFile(ex.Message, sFuncName)
+            Return Nothing
+        Finally
+            oSR.Close()
+            oSR = Nothing
+        End Try
+
+    End Function
+
     Public Function GetDataViewFromCSV(ByVal CurrFileToUpload As String, ByVal Filename As String, ByRef oDTMAP As DataTable, ByRef oDTDim3 As DataTable, ByRef oDTDim4 As DataTable, ByRef sErrDesc As String) As DataView
 
         ' **********************************************************************************
@@ -349,7 +587,8 @@ Module modJournalVoucher
             oDVGLMAP = New DataView(oDTGLMAP)
 
 
-            sSQL = "SELECT T0.""U_CCCode"",T0.""U_Column6"", T0.""U_CostCenterName"" FROM ""@TBLCCMAP""  T0"
+            'sSQL = "SELECT T0.""U_CCCode"",T0.""U_Column6"", T0.""U_CostCenterName"" FROM ""@TBLCCMAP""  T0"
+            sSQL = "SELECT T0.""U_CCCode"",T0.""U_Column6"", T0.""U_CostCenterName"" FROM ""@TBCCMAP_V2""  T0"
             oDTCC3 = New DataTable
             oRset.DoQuery(sSQL)
             oDTCC3 = ConvertRecordset(oRset, sErrDesc)
@@ -456,7 +695,7 @@ Module modJournalVoucher
                 Else
                     sCC4 = ""
                 End If
-              
+
 
                 'Commented on 11 Nov 2016 - Shibin
                 'dDate = DateTime.ParseExact(sString(0), "dd-MMM-yy",
