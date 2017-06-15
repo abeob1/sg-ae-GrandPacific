@@ -64,3 +64,7 @@ E:\Abeo-Projects\Abeo_Projects_WorkArea\Hotel Grand Pacific\sg-ae-GrandPacific.g
 E:\Abeo-Projects\Abeo_Projects_WorkArea\Hotel Grand Pacific\sg-ae-GrandPacific.git\trunk\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbprojResolveAssemblyReference.cache
 E:\Abeo-Projects\Abeo_Projects_WorkArea\Hotel Grand Pacific\sg-ae-GrandPacific.git\trunk\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.Resources.resources
 E:\Abeo-Projects\Abeo_Projects_WorkArea\Hotel Grand Pacific\sg-ae-GrandPacific.git\trunk\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.vbproj.GenerateResource.Cache
+E:\SVN\HOTEL GRAND PACIFIC\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\bin\Debug\AE_GRANDPACIFIC_V01.exe.config
+E:\SVN\HOTEL GRAND PACIFIC\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.exe
+E:\SVN\HOTEL GRAND PACIFIC\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.xml
+E:\SVN\HOTEL GRAND PACIFIC\1. Source\AE_GRANDPACIFIC_V01\AE_GRANDPACIFIC_V01\obj\x86\Debug\AE_GRANDPACIFIC_V01.pdb

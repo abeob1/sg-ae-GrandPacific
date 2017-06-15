@@ -193,8 +193,20 @@ Module modJournalVoucher
                     Continue For
                 End If
 
-                If sFileName.StartsWith("RD") Then
-                    If JournalVoucher_Posting(oDVJE, File.Name, sErrDesc) <> RTN_SUCCESS Then
+                'If sFileName.StartsWith("RD") Then
+                '    If JournalVoucher_Posting(oDVJE, File.Name, sErrDesc) <> RTN_SUCCESS Then
+                '        MoveFile(fFilePath, iFilePath, File.Name)
+                '        Console.WriteLine("Moving CSV file to Fail folder", sFuncName)
+                '        If p_iDebugMode = DEBUG_ON Then WriteToLogFile_Debug("Calling MoveFile() for moving CSV file to Fail folder", sFuncName)
+                '        oDT_MailText.Rows.Add(File.Name, "Error", sErrDesc)
+                '    Else
+                '        MoveFile(sFilePath, iFilePath, File.Name)
+                '        Console.WriteLine("Moving CSV file to Success folder", sFuncName)
+                '        If p_iDebugMode = DEBUG_ON Then WriteToLogFile_Debug("Calling MoveFile() for moving CSV file to Success folder", sFuncName)
+                '        oDT_MailText.Rows.Add(File.Name, "Success", sErrDesc)
+                '    End If
+                If sFileName.StartsWith("RM") Then
+                    If JournalVoucher_Posting_RM(oDVJE, File.Name, sErrDesc) <> RTN_SUCCESS Then
                         MoveFile(fFilePath, iFilePath, File.Name)
                         Console.WriteLine("Moving CSV file to Fail folder", sFuncName)
                         If p_iDebugMode = DEBUG_ON Then WriteToLogFile_Debug("Calling MoveFile() for moving CSV file to Fail folder", sFuncName)
@@ -503,6 +515,86 @@ Module modJournalVoucher
         Finally
             oSR.Close()
             oSR = Nothing
+        End Try
+
+    End Function
+
+    Public Function JournalVoucher_Posting_RM(ByVal oDVJV As DataView, ByVal sfileName As String, ByRef sErrDesc As String) As Long
+        ' **********************************************************************************
+        '   Function    :   JournalVoucher_Posting()
+        '   Purpose     :   This function will upload the data from  Dataview to Journal Voucher
+        '   Parameters  :   ByVal oDVJV As DataView
+        '                       ByVal sfileName As String
+        '                          ByRef sErrDesc As String       
+        '   Author      :   JOHN
+        '   Date        :   NOV 2016 
+        ' **********************************************************************************
+
+        Dim sFuncName As String = String.Empty
+        Dim ival As Integer
+        Dim IsError As Boolean
+        Dim iErr As Integer = 0
+        Dim sErr As String = String.Empty
+        Dim sJV As String = String.Empty
+        Dim oJournalEntry As SAPbobsCOM.JournalVouchers = Nothing
+
+        Try
+            sFuncName = "JournalVoucher_Posting_RM"
+            Console.WriteLine("Starting Function ", sFuncName)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Starting Function ", sFuncName)
+            oJournalEntry = p_oCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oJournalVouchers)
+
+            oJournalEntry.JournalEntries.ReferenceDate = DateTime.ParseExact(oDVJV.Item(0)("Pdate"), "yyyyMMdd", Nothing)
+            '' oJournalEntry.JournalEntries.Memo = Left("Cost Allocation for the month of " & UCase(MonthName(Month(dDate))) & " - " & Year(dDate), 50)
+            '' oJournalEntry.JournalEntries.Reference3 = sRef
+            oJournalEntry.JournalEntries.Memo = sfileName
+
+            For Each odr As DataRowView In oDVJV
+                oJournalEntry.JournalEntries.Lines.AccountCode = odr("GLCode").ToString.Trim
+                oJournalEntry.JournalEntries.Lines.Debit = CDbl(odr("Debit").ToString.Trim)
+                oJournalEntry.JournalEntries.Lines.Credit = CDbl(odr("Credit").ToString.Trim)
+                If Not String.IsNullOrEmpty(odr("Dim3").ToString.Trim) Then
+                    oJournalEntry.JournalEntries.Lines.CostingCode3 = odr("Dim3").ToString.Trim 'OU
+                End If
+                If Not String.IsNullOrEmpty(odr("Dim4").ToString.Trim) Then
+                    oJournalEntry.JournalEntries.Lines.CostingCode4 = odr("Dim4").ToString.Trim 'Project
+                End If
+                oJournalEntry.JournalEntries.Lines.BPLID = 1
+                oJournalEntry.JournalEntries.Lines.UserFields.Fields.Item("U_AE_SuiteCode").Value = odr("SuiteCode").ToString.Trim
+                oJournalEntry.JournalEntries.Lines.UserFields.Fields.Item("U_AE_SuiteName").Value = odr("SuiteName").ToString.Trim
+                oJournalEntry.JournalEntries.Lines.Add()
+            Next
+
+
+
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Attempting to Add the Journal Voucher", sFuncName)
+            ival = oJournalEntry.Add()
+
+            If ival <> 0 Then
+                IsError = True
+                p_oCompany.GetLastError(iErr, sErr)
+                Call WriteToLogFile("Completed with ERROR while adding the Journal Voucher ---" & sErr, sFuncName)
+                Console.WriteLine("Completed with ERROR while adding the Journal Voucher", sFuncName)
+                If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Completed with ERROR while adding the Journal Voucher" & sErr, sFuncName)
+                JournalVoucher_Posting_RM = RTN_ERROR
+                Throw New ArgumentException(sErr)
+            End If
+
+            Console.WriteLine("Completed with SUCCESS", sFuncName)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Completed with SUCCESS while adding the Journal Voucher", sFuncName)
+            p_oCompany.GetNewObjectCode(sJV)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Journal Voucher DocEntry  " & sJV, sFuncName)
+            sErrDesc = String.Empty
+            JournalVoucher_Posting_RM = RTN_SUCCESS
+
+        Catch ex As Exception
+            sErrDesc = ex.Message
+
+            Call WriteToLogFile(ex.Message, sFuncName)
+            Console.WriteLine("Completed with ERROR while adding the Journal Voucher", sFuncName)
+            If p_iDebugMode = DEBUG_ON Then Call WriteToLogFile_Debug("Completed with ERROR while adding the Journal Voucher" & ex.Message, sFuncName)
+            JournalVoucher_Posting_RM = RTN_ERROR
+            Exit Function
         End Try
 
     End Function
