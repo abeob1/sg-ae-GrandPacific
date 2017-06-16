@@ -172,7 +172,7 @@ Module modJournalVoucher
 
                     If oDTDim3.Rows.Count > 0 Then
                         For Each odr As DataRow In oDTDim3.Rows
-                            oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code not defined in SAP")
+                            oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code for dimension3 not defined in SAP")
                             WriteToLogFile(odr(0) & " Code not defined in SAP", sFuncName)
                         Next
                     End If
@@ -186,7 +186,7 @@ Module modJournalVoucher
 
                     If oDTDim4.Rows.Count > 0 Then
                         For Each odr As DataRow In oDTDim4.Rows
-                            oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code not defined in SAP")
+                            oDT_MailText.Rows.Add(File.Name, "Error", odr(0) & " Code for dimension4 not defined in SAP")
                             WriteToLogFile(odr(0) & " Code not defined in SAP", sFuncName)
                         Next
                     End If
