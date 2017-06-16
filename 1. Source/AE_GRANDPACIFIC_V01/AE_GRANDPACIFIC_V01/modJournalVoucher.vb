@@ -788,16 +788,30 @@ Module modJournalVoucher
             '' oJournalEntry.JournalEntries.Reference3 = sRef
             oJournalEntry.JournalEntries.Memo = sfileName
 
+            Dim sDimCode3 As String = String.Empty
+            Dim sDimCode4 As String = String.Empty
+
             For Each odr As DataRowView In oDVJV
                 oJournalEntry.JournalEntries.Lines.AccountCode = odr("GLCode").ToString.Trim
                 oJournalEntry.JournalEntries.Lines.Debit = CDbl(odr("Debit").ToString.Trim)
                 oJournalEntry.JournalEntries.Lines.Credit = CDbl(odr("Credit").ToString.Trim)
-                If Not String.IsNullOrEmpty(odr("Dim3").ToString.Trim) Then
-                    oJournalEntry.JournalEntries.Lines.CostingCode3 = odr("Dim3").ToString.Trim 'OU
+
+                'If Not String.IsNullOrEmpty(odr("Dim3").ToString.Trim) Then
+                '    oJournalEntry.JournalEntries.Lines.CostingCode3 = odr("Dim3").ToString.Trim 'OU
+                'End If
+                'If Not String.IsNullOrEmpty(odr("Dim4").ToString.Trim) Then
+                '    oJournalEntry.JournalEntries.Lines.CostingCode4 = odr("Dim4").ToString.Trim 'Project
+                'End If
+
+                sDimCode3 = odr("Dim3").ToString.Trim
+                sDimCode4 = odr("Dim4").ToString.Trim
+                If Not (sDimCode3 = String.Empty) Then
+                    oJournalEntry.JournalEntries.Lines.CostingCode3 = sDimCode3
                 End If
-                If Not String.IsNullOrEmpty(odr("Dim4").ToString.Trim) Then
-                    oJournalEntry.JournalEntries.Lines.CostingCode4 = odr("Dim4").ToString.Trim 'Project
+                If Not (sDimCode4 = String.Empty) Then
+                    oJournalEntry.JournalEntries.Lines.CostingCode4 = sDimCode4
                 End If
+
                 oJournalEntry.JournalEntries.Lines.BPLID = 1
                 oJournalEntry.JournalEntries.Lines.UserFields.Fields.Item("U_AE_SuiteCode").Value = odr("SuiteCode").ToString.Trim
                 oJournalEntry.JournalEntries.Lines.UserFields.Fields.Item("U_AE_SuiteName").Value = odr("SuiteName").ToString.Trim
