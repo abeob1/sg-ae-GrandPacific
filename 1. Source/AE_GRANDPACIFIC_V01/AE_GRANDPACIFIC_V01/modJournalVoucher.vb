@@ -790,8 +790,10 @@ Module modJournalVoucher
 
             Dim sDimCode3 As String = String.Empty
             Dim sDimCode4 As String = String.Empty
+            Dim sAcctCode As String = String.Empty
 
             For Each odr As DataRowView In oDVJV
+                sAcctCode = odr("GLCode").ToString.Trim
                 oJournalEntry.JournalEntries.Lines.AccountCode = odr("GLCode").ToString.Trim
                 oJournalEntry.JournalEntries.Lines.Debit = CDbl(odr("Debit").ToString.Trim)
                 oJournalEntry.JournalEntries.Lines.Credit = CDbl(odr("Credit").ToString.Trim)
@@ -803,13 +805,16 @@ Module modJournalVoucher
                 '    oJournalEntry.JournalEntries.Lines.CostingCode4 = odr("Dim4").ToString.Trim 'Project
                 'End If
 
-                sDimCode3 = odr("Dim3").ToString.Trim
-                sDimCode4 = odr("Dim4").ToString.Trim
-                If Not (sDimCode3 = String.Empty) Then
-                    oJournalEntry.JournalEntries.Lines.CostingCode3 = sDimCode3
-                End If
-                If Not (sDimCode4 = String.Empty) Then
-                    oJournalEntry.JournalEntries.Lines.CostingCode4 = sDimCode4
+                If sAcctCode.Substring(0, 1) = "1" Or sAcctCode.Substring(0, 1) = "2" Or sAcctCode.Substring(0, 1) = "3" Then
+                Else
+                    sDimCode3 = odr("Dim3").ToString.Trim
+                    sDimCode4 = odr("Dim4").ToString.Trim
+                    If Not (sDimCode3 = String.Empty) Then
+                        oJournalEntry.JournalEntries.Lines.CostingCode3 = sDimCode3
+                    End If
+                    If Not (sDimCode4 = String.Empty) Then
+                        oJournalEntry.JournalEntries.Lines.CostingCode4 = sDimCode4
+                    End If
                 End If
 
                 oJournalEntry.JournalEntries.Lines.BPLID = 1
