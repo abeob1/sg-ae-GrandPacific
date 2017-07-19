@@ -1,0 +1,345 @@
+CREATE PROCEDURE AE_DAILYSALES_SECTION_C
+( 
+IN DocDate DATE
+) 
+AS
+DateFrom VARCHAR(20);
+RevenueSum NUMERIC(18,3);
+Actual NUMERIC(18,3);
+GuestNoToday INTEGER;
+GuestNoActual INTEGER;
+GuestNoBudget INTEGER;
+GuestNoLastYr INTEGER;
+DROccupiedToday INTEGER;
+DROccupiedActual INTEGER;
+DROccupiedBudget INTEGER;
+DROccupiedLastYr INTEGER;
+OccupancyToday INTEGER;
+OccupancyActual INTEGER;
+OccupancyBudget INTEGER;
+OccupancyLastYr INTEGER;
+AvgLenStyToday INTEGER;
+AvgLenStyActual INTEGER;
+AvgLenStyBudget INTEGER;
+AvgLenStyLastYr INTEGER;
+FoodSlsToday NUMERIC(18,3);
+FoodSlsActual NUMERIC(18,3);
+FoodSlsBudget NUMERIC(18,3);
+FoodSlsLastYr NUMERIC(18,3);
+FoodSlCostTday NUMERIC(18,3);
+FoodSlCostActl NUMERIC(18,3);
+FoodSlCostBdgt NUMERIC(18,3);
+FoodSlCostLstYr NUMERIC(18,3);
+BvrgSalesToday NUMERIC(18,3);
+BvrgSalesActual NUMERIC(18,3);
+BvrgSalesBudget NUMERIC(18,3);
+BvrgSalesLstYr NUMERIC(18,3);
+BvrgCostToday NUMERIC(18,3);
+BvrgCostActual NUMERIC(18,3);
+BvrgCostBudget NUMERIC(18,3);
+BvrgCostLstYr NUMERIC(18,3);
+OthrIncToday NUMERIC(18,3);
+OthrIncActual NUMERIC(18,3);
+OthrIncBudget NUMERIC(18,3);
+OthrIncLstYr NUMERIC(18,3);
+BEGIN
+
+DateFrom:=TO_CHAR(:DocDate ,'YYYY-MM-DD');
+
+CREATE COLUMN TABLE ACTUAL(LineId INTEGER,U_Name VARCHAR(50),Actual NUMERIC(18,3));
+CREATE COLUMN TABLE BUDGET(Budget NUMERIC(18,2));
+CREATE COLUMN TABLE LASTYEAR(LineId INTEGER,U_Name VARCHAR(50),LastYear NUMERIC(18,2));
+
+----------------------CALCULATE ACTUAL---------------------
+INSERT INTO ACTUAL
+SELECT T1."LineId", T1."U_Name", SUM(TO_DOUBLE(T1."U_Occupied")) AS "Actual"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+GROUP BY T1."LineId",T1."U_Name"
+ORDER BY T1."U_Name";
+
+----------------------CALCULATE BUDGET---------------------
+INSERT INTO BUDGET
+SELECT SUM(A."DebLTotal") - SUM(A."CredLTotal") AS "Budget"
+FROM "OBGT" A 
+INNER JOIN "BGT1" B ON B."BudgId" = A."AbsId"
+WHERE A."AbsId" = 1;
+
+----------------------CALCULATE LAST YEAR---------------------
+INSERT INTO LASTYEAR
+SELECT T1."LineId", T1."U_Name", SUM(TO_DOUBLE(T1."U_Occupied")) AS "LastYear"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY)
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1)
+GROUP BY T1."LineId",T1."U_Name"
+ORDER BY T1."U_Name";
+
+--------------------------CALCULATE NO.OF GUEST-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO GuestNoToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'NO. OF GUEST';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO GuestNoActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'NO. OF GUEST';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO GuestNoBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'NO. OF GUEST';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO GuestNoLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'NO. OF GUEST';
+
+--------------------------DOUBLE ROOM OCCUPIED-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO DROccupiedToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'DOUBLE ROOM OCCUPIED';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO DROccupiedActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'DOUBLE ROOM OCCUPIED';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO DROccupiedBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'DOUBLE ROOM OCCUPIED';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO DROccupiedLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'DOUBLE ROOM OCCUPIED';
+
+--------------------------DOUBLE OCCUPANCY-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO OccupancyToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'DOUBLE OCCPANCY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO OccupancyActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'DOUBLE OCCPANCY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO OccupancyBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'DOUBLE OCCPANCY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO OccupancyLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'DOUBLE OCCPANCY';
+
+--------------------------AVG. LENGHT OF STAY-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO AvgLenStyToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'AVG LENTH OF STAY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO AvgLenStyActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'AVG LENTH OF STAY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO AvgLenStyBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'AVG LENTH OF STAY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO AvgLenStyLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'AVG LENTH OF STAY';
+
+--------------------------FOOD SALES-------------------------
+SELECT --CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO FoodSlsToday
+SUM(T1."Credit") INTO FoodSlsToday
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" = :DateFrom
+AND T1."Account" = '402101';
+
+SELECT --CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO FoodSlsActual
+SUM(T1."Credit") INTO FoodSlsActual
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."RefDate" <= :DateFrom
+AND T1."Account" = '402101';
+
+SELECT SUM(T1."CredLTotal") INTO FoodSlsBudget
+FROM "OBGT" T0  
+INNER JOIN "BGT2" T1 ON T1."BudgId" = T0."AbsId"
+INNER JOIN "OACT" T2 ON T2."AcctCode" = T0."AcctCode"
+WHERE UPPER(T2."ExportCode") = 'YES'
+AND T1."DimCode" = '4' AND T0."AcctCode" = '402101';
+
+SELECT --CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO FoodSlsLastYr
+SUM(T1."Credit") INTO FoodSlsLastYr
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."RefDate" <= ADD_YEARS(:DateFrom,-1)
+AND T1."Account" = '402101';
+
+--------------------------COST OF FOOD SALES-------------------------
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO FoodSlCostTday
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" = :DateFrom
+AND T1."Account" = '501011';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO FoodSlCostActl
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."RefDate" <= :DateFrom
+AND T1."Account" = '501011';
+
+SELECT SUM(T1."CredLTotal") INTO FoodSlCostBdgt
+FROM "OBGT" T0  
+INNER JOIN "BGT2" T1 ON T1."BudgId" = T0."AbsId"
+INNER JOIN "OACT" T2 ON T2."AcctCode" = T0."AcctCode"
+WHERE UPPER(T2."ExportCode") = 'YES'
+AND T1."DimCode" = '4' AND T0."AcctCode" = '501011';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO FoodSlCostLstYr
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."RefDate" <= ADD_YEARS(:DateFrom,-1)
+AND T1."Account" = '501011';
+
+--------------------------BEVARAGE SALES-------------------------
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO BvrgSalesToday
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" = :DateFrom
+AND T1."Account" = '402102';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO BvrgSalesActual
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."RefDate" <= :DateFrom
+AND T1."Account" = '402102';
+
+SELECT SUM(T1."CredLTotal") INTO BvrgSalesBudget
+FROM "OBGT" T0  
+INNER JOIN "BGT2" T1 ON T1."BudgId" = T0."AbsId"
+INNER JOIN "OACT" T2 ON T2."AcctCode" = T0."AcctCode"
+WHERE UPPER(T2."ExportCode") = 'YES'
+AND T1."DimCode" = '4' AND T0."AcctCode" = '402102';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO BvrgSalesLstYr
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."RefDate" <= ADD_YEARS(:DateFrom,-1)
+AND T1."Account" = '402102';
+
+--------------------------COST OF BEVARAGE-------------------------
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO BvrgCostToday
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" = :DateFrom
+AND T1."Account" = '501012';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO BvrgCostActual
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."RefDate" <= :DateFrom
+AND T1."Account" = '501012';
+
+SELECT SUM(T1."CredLTotal") INTO BvrgCostBudget
+FROM "OBGT" T0  
+INNER JOIN "BGT2" T1 ON T1."BudgId" = T0."AbsId"
+INNER JOIN "OACT" T2 ON T2."AcctCode" = T0."AcctCode"
+WHERE UPPER(T2."ExportCode") = 'YES'
+AND T1."DimCode" = '4' AND T0."AcctCode" = '501012';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO BvrgCostLstYr
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."RefDate" <= ADD_YEARS(:DateFrom,-1)
+AND T1."Account" = '501012';
+
+--------------------------OTHER INCOME-------------------------
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO OthrIncToday
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" = :DateFrom
+AND T1."Account" = '402000';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO OthrIncActual
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."RefDate" <= :DateFrom
+AND T1."Account" = '402000';
+
+SELECT SUM(T1."CredLTotal") INTO OthrIncBudget
+FROM "OBGT" T0  
+INNER JOIN "BGT2" T1 ON T1."BudgId" = T0."AbsId"
+INNER JOIN "OACT" T2 ON T2."AcctCode" = T0."AcctCode"
+WHERE UPPER(T2."ExportCode") = 'YES'
+AND T1."DimCode" = '4' AND T0."AcctCode" = '402000';
+
+SELECT CASE WHEN SUM(T1."Debit") = 0 THEN SUM(T1."Credit") ELSE SUM(T1."Debit") END INTO OthrIncLstYr
+FROM "OJDT" T0
+INNER JOIN "JDT1" T1 ON T1."TransId" = T0."TransId"
+WHERE T0."RefDate" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."RefDate" <= ADD_YEARS(:DateFrom,-1)
+AND T1."Account" = '402000';
+
+--------------------------FINAL QUERY-------------------------
+SELECT DISTINCT T1."U_Name",IFNULL(TO_DOUBLE(T1."U_Occupied"),0) AS "B2-2",T2.Actual AS "B3-2",
+(SELECT Budget FROM BUDGET) AS "B4-2",IFNULL(T3.LastYear,0) AS "B5-2",
+IFNULL(GuestNoToday,0) AS "GuestNoToday",IFNULL(GuestNoActual,0) AS "GuestNoActual",
+IFNULL(GuestNoBudget,0) AS "GuestNoBudget",IFNULL(GuestNoLastYr,0) AS "GuestNoLastYr" ,
+IFNULL(DROccupiedToday,0) AS "DROccupiedToday",IFNULL(DROccupiedActual,0) AS "DROccupiedActual",
+IFNULL(DROccupiedBudget,0) AS "DROccupiedBudget",IFNULL(DROccupiedLastYr,0) AS "DROccupiedLastYr",
+IFNULL(OccupancyToday,0) AS "OccupancyToday",IFNULL(OccupancyActual,0) AS "OccupancyActual",
+IFNULL(OccupancyBudget,0) AS "OccupancyBudget",IFNULL(OccupancyLastYr,0) AS "OccupancyLastYr",
+IFNULL(AvgLenStyToday,0) AS "AvgLenStyToday",IFNULL(AvgLenStyActual,0) AS "AvgLenStyActual",
+IFNULL(AvgLenStyBudget,0) AS "AvgLenStyBudget",IFNULL(AvgLenStyLastYr,0) AS "AvgLenStyLastYr",
+IFNULL(FoodSlsToday,0) AS "FoodSalesToday",IFNULL(FoodSlsActual,0) AS "FoodSalesActual",
+IFNULL(FoodSlsBudget,0) AS "FoodSalesBudget",IFNULL(FoodSlsLastYr,0) AS "FoodSalesLastYr",
+IFNULL(FoodSlCostTday,0) AS "FoodSalCostToday",IFNULL(FoodSlCostActl,0) AS "FoodSalCostActual",
+IFNULL(FoodSlCostBdgt,0) AS "FoodSalCostBudget",IFNULL(FoodSlCostLstYr,0) AS "FoodSalCostLstYr",
+IFNULL(BvrgSalesToday,0) AS "BevSalesToday",IFNULL(BvrgSalesActual,0) AS "BevSalesActual",
+IFNULL(BvrgSalesBudget,0) AS "BevSalesBudget",IFNULL(BvrgSalesLstYr,0) AS "BevSalesLstYr",
+IFNULL(BvrgCostToday,0) AS "BevCostToday",IFNULL(BvrgCostActual,0) AS "BevCostActual",
+IFNULL(BvrgCostBudget,0) AS "BevCostBudget",IFNULL(BvrgCostLstYr,0) AS "BevCostLstYr",
+IFNULL(OthrIncToday,0) AS "OthrIncToday",IFNULL(OthrIncActual,0) AS "OthrIncActual",
+IFNULL(OthrIncBudget,0) AS "OthrIncBudget",IFNULL(OthrIncLstYr,0) AS "OthrIncLstYr"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+LEFT OUTER JOIN ACTUAL T2 ON T2.LineId = T1."LineId" AND T2.U_Name = T1."U_Name"
+LEFT OUTER JOIN LASTYEAR T3 ON T3.LineId = T1."LineId" AND T3.U_Name = T1."U_Name"
+WHERE T0."U_Date" = :DateFrom
+ORDER BY T1."U_Name";
+
+DROP TABLE ACTUAL;
+DROP TABLE BUDGET;
+DROP TABLE LASTYEAR;
+
+END

@@ -1,0 +1,300 @@
+CREATE PROCEDURE AE_DAILYSALES_SECTION_B
+( 
+IN DocDate DATE
+) 
+AS
+DateFrom VARCHAR(20);
+TodayPer NUMERIC(18,3);
+ActualPer NUMERIC(18,3);
+BudgetPer NUMERIC(18,3);
+LastYrPer NUMERIC(18,3);
+ComplimentoryToday INTEGER;
+ComplimentoryActual INTEGER;
+ComplimentoryBudget INTEGER;
+ComplimentoryLastYr INTEGER;
+OutofOrderToday INTEGER;
+OutofOrderActual INTEGER;
+OutofOrderBudget INTEGER;
+OutofOrderLastYr INTEGER;
+VacantNFSToday INTEGER;
+VacantNFSActual INTEGER;
+VacantNFSBudget INTEGER;
+VacantNFSLastYr INTEGER;
+HouseUseToday INTEGER;
+HouseUseActual INTEGER;
+HouseUseBudget INTEGER;
+HouseUseLastYr INTEGER;
+NoShowToday INTEGER;
+NoShowActual INTEGER;
+NoShowBudget INTEGER;
+NoShowLastYr INTEGER;
+DayUseToday INTEGER;
+DayUseActual INTEGER;
+DayUseBudget INTEGER;
+DayUseLastYr INTEGER;
+TotalRoomsToday INTEGER;
+TotalRoomsActual INTEGER;
+TotalRoomsBudget INTEGER;
+TotalRoomsLastYr INTEGER;
+BEGIN
+
+DateFrom:=TO_CHAR(:DocDate ,'YYYY-MM-DD');
+
+CREATE COLUMN TABLE ACTUAL(LineId INTEGER,U_Name VARCHAR(50),Actual VARCHAR(50));
+CREATE COLUMN TABLE BUDGET(U_Code VARCHAR(10),U_Name VARCHAR(100),BudgetRoom NUMERIC(18,2));
+CREATE COLUMN TABLE LASTYEAR(LineId INTEGER,U_Name VARCHAR(50),LastYear NUMERIC(18,2));
+
+----------------------CALCULATE ACTUAL---------------------
+INSERT INTO ACTUAL
+SELECT T1."LineId", T1."U_Name", SUM(TO_DOUBLE(T1."U_Occupied")) AS "Actual"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+GROUP BY T1."LineId",T1."U_Name"
+ORDER BY T1."U_Name";
+
+----------------------CALCULATE BUDGET---------------------
+INSERT INTO BUDGET
+SELECT T1."U_Code",T1."U_Name",SUM(TO_DOUBLE(T1."U_BudgetRoom"))
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+GROUP BY T1."U_Code",T1."U_Name";
+
+----------------------CALCULATE LAST YEAR---------------------
+INSERT INTO LASTYEAR
+SELECT T1."LineId", T1."U_Name", SUM(TO_DOUBLE(T1."U_Occupied")) AS "LastYear"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY)
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1)
+GROUP BY T1."LineId",T1."U_Name"
+ORDER BY T1."U_Name";
+
+-----------------------CALCULATE PERCENTAGE----------------------------------
+SELECT SUM("Today") INTO TodayPer 
+FROM(
+SELECT DISTINCT T1."U_Name", TO_DOUBLE(T1."U_Occupied") AS "Today"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom
+ORDER BY T1."U_Name")T;
+
+SELECT SUM(TO_DOUBLE(T1."U_Occupied")) INTO ActualPer 
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom;
+
+SELECT SUM(TO_DOUBLE(T1."U_BudgetRoom")) INTO BudgetPer
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)));
+
+SELECT SUM(TO_DOUBLE(T1."U_Occupied")) INTO LastYrPer
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY)
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1);
+
+--------------------------CALCULATE COMPLIMENTORY----------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO ComplimentoryToday 
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'COMPLIMENTARY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO ComplimentoryActual 
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'COMPLIMENTARY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO ComplimentoryBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'COMPLIMENTARY';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO ComplimentoryLastYr 
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1)
+AND  UPPER(T1."U_Name") = 'COMPLIMENTARY';
+
+--------------------------CALCULATE OUT OF ORDER-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO OutofOrderToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'OUT OF ORDER';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO OutofOrderActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'OUT OF ORDER';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO OutofOrderBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'OUT OF ORDER';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO OutofOrderLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'OUT OF ORDER';
+
+--------------------------VACANT-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO VacantNFSToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+INNER JOIN "@TBLMK" T2 ON T2."Code" = T1."U_Code"
+WHERE T2."U_NFS" = 'Y' AND T0."U_Date" = :DateFrom;
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO VacantNFSActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+INNER JOIN "@TBLMK" T2 ON T2."Code" = T1."U_Code"
+WHERE T2."U_NFS" = 'Y' 
+AND T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom;
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO VacantNFSBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+INNER JOIN "@TBLMK" T2 ON T2."Code" = T1."U_Code"
+WHERE T2."U_NFS" = 'Y' AND UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)));
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO VacantNFSLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+INNER JOIN "@TBLMK" T2 ON T2."Code" = T1."U_Code"
+WHERE T2."U_NFS" = 'Y' 
+AND T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1);
+
+--------------------------TOTAL ROOMS-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T0."U_TOTALROOM")),0) INTO TotalRoomsToday
+FROM "@TBLRM" T0
+WHERE T0."U_Date" = :DateFrom;
+
+SELECT IFNULL(SUM(TO_DOUBLE(T0."U_TOTALROOM")),0) INTO TotalRoomsActual
+FROM "@TBLRM" T0
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) 
+AND T0."U_Date" <= :DateFrom;
+
+SELECT SUM(TO_DOUBLE(T1."U_BudgetRoom")) INTO TotalRoomsBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)));
+
+SELECT IFNULL(SUM(TO_DOUBLE(T0."U_TOTALROOM")),0) INTO TotalRoomsLastYr
+FROM "@TBLRM" T0
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1);
+
+--------------------------CALCULATE HOUSE USE-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO HouseUseToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'HOUSE USE';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO HouseUseActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'HOUSE USE'; 
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO HouseUseBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'HOUSE USE';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO HouseUseLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'HOUSE USE';
+
+--------------------------CALCULATE NO SHOW-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO NoShowToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'NO SHOW';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO NoShowActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'NO SHOW';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO NoShowBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'NO SHOW';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO NoShowLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'NO SHOW';
+
+--------------------------CALCULATE DAY USE-------------------------
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO DayUseToday
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" = :DateFrom AND  UPPER(T1."U_Name") = 'DAY USE';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO DayUseActual
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND T0."U_Date" <= :DateFrom
+AND  UPPER(T1."U_Name") = 'DAY USE';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_BudgetRoom")),0) INTO DayUseBudget
+FROM "@TBLRMBG" T0
+INNER JOIN "@TBLRMBG1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE UPPER(T0."U_Month") = UPPER((MONTHNAME (:DateFrom) || ' ' || YEAR(:DateFrom)))
+AND  UPPER(T1."U_Name") = 'DAY USE';
+
+SELECT IFNULL(SUM(TO_DOUBLE(T1."U_Occupied")),0) INTO DayUseLastYr
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+WHERE T0."U_Date" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND T0."U_Date" <= ADD_YEARS(:DateFrom,-1) AND  UPPER(T1."U_Name") = 'DAY USE';
+
+--------------------------FINAL QUERY-------------------------
+SELECT DISTINCT T1."U_Code", T1."U_Name", TO_DOUBLE(T1."U_Occupied") AS "Today",TO_DOUBLE(T2.Actual) AS "Actual",
+T4.BudgetRoom AS "Budget",
+IFNULL(T3.LastYear,0) AS "LastYear",
+((TO_DOUBLE(T1."U_Occupied") / TodayPer) * 100) AS "TodayPer",
+((TO_DOUBLE(T2.Actual) / ActualPer) * 100) AS "ActualPer",
+((TO_DOUBLE(T4.BudgetRoom)/ BudgetPer) * 100) AS "BudgetPer",
+((IFNULL(T3.LastYear,0) / LastYrPer) * 100) AS "LastYrPer",
+OutofOrderToday AS "OutofOrderToday",OutofOrderActual AS "OutofOrderActual",
+OutofOrderBudget AS "OutofOrderBudget",OutofOrderLastYr AS "OutofOrderLasyYr",
+ComplimentoryToday AS "ComplimentoryToday",ComplimentoryActual AS "ComplimentoryActual",
+ComplimentoryBudget AS "ComplimentoryBudget",ComplimentoryLastYr AS "ComplimentoryLasyYr",
+VacantNFSToday AS "VacantNFSToday",VacantNFSActual AS "VacantNFSActual",
+VacantNFSBudget AS "VacantNFSBudget",VacantNFSLastYr AS "VacantNFSLastYr",
+TotalRoomsToday AS "TotalRoomsToday",TotalRoomsActual AS "TotalRoomsActual",
+TotalRoomsBudget AS "TotalRoomsBudget",TotalRoomsLastYr AS "TotalRoomsLastYr",
+HouseUseToday AS "HouseUseToday" ,HouseUseActual AS "HouseUseActual" ,
+HouseUseBudget AS "HouseUseBudget",HouseUseLastYr AS "HouseUseLastYr",
+NoShowToday AS "NoShowToday",NoShowActual AS "NoShowActual",NoShowBudget AS "NoShowBudget",NoShowLastYr AS "NoShowLastYr",
+DayUseToday AS "DayUseToday",DayUseActual AS "DayUseActual",DayUseBudget AS "DayUseBudget",DayUseLastYr AS "DayUseLastYr"
+FROM "@TBLRM" T0
+INNER JOIN "@TBLRM1" T1 ON T1."DocEntry" = T0."DocEntry"
+LEFT OUTER JOIN ACTUAL T2 ON T2.U_Name = T1."U_Name" AND T2.LineId = T1."LineId"
+LEFT OUTER JOIN LASTYEAR T3 ON T3.U_Name = T1."U_Name" AND T3.LineId = T1."LineId"
+LEFT OUTER JOIN BUDGET T4 ON T4.U_Code = T1."U_Code" --AND T4.U_Name = T1."U_Name"
+WHERE T0."U_Date" = :DateFrom
+ORDER BY T1."U_Name";
+
+DROP TABLE ACTUAL;
+DROP TABLE BUDGET;
+DROP TABLE LASTYEAR;
+
+END

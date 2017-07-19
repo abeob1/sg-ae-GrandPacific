@@ -1,0 +1,107 @@
+CREATE PROCEDURE AE_DAILYSALES_SECTION_A
+( 
+IN DocDate DATE
+) 
+AS
+DateFrom VARCHAR(20);
+StaffToday INTEGER;
+StaffActual INTEGER;
+StaffBudget INTEGER;
+StaffLastYear INTEGER;
+BEGIN
+
+DateFrom:=TO_CHAR(:DocDate ,'YYYY-MM-DD');
+
+CREATE COLUMN TABLE TODAYREVENUE(OcrCode4 VARCHAR(50),OcrCode3 VARCHAR(50),OcrCode2 VARCHAR(50),TodayCredit NUMERIC(18,2),TodayDebit NUMERIC(18,2));
+CREATE COLUMN TABLE ACTUALREVENUE(OcrCode4 VARCHAR(50),OcrCode3 VARCHAR(50),OcrCode2 VARCHAR(50),ActualCredit NUMERIC(18,2),ActualDebit NUMERIC(18,2));
+CREATE COLUMN TABLE BUDGET(OcrCode VARCHAR(50),DimCode VARCHAR(50),BudgetDebit NUMERIC(18,3),BudgetCredit NUMERIC(18,3));
+CREATE COLUMN TABLE LASTYEARREVENUE(OcrCode4 VARCHAR(50),OcrCode3 VARCHAR(50),OcrCode2 VARCHAR(50),LastYrCredit NUMERIC(18,2),LastYrDebit NUMERIC(18,2));
+
+SELECT SUM("U_ActualStaff") INTO StaffToday 
+FROM "@TBL5STAFF" 
+WHERE "U_Month" BETWEEN (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY)
+AND TO_DATE(LAST_DAY(:DateFrom),'YYYY-MM-DD');
+
+SELECT SUM("U_ActualStaff") INTO StaffActual FROM "@TBL5STAFF" 
+WHERE "U_Month"
+BETWEEN (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY)
+AND TO_DATE(LAST_DAY(:DateFrom),'YYYY-MM-DD');
+
+SELECT SUM("U_BudgetStaff") INTO StaffBudget FROM "@TBL5STAFF" 
+WHERE "U_Month"
+BETWEEN (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY)
+AND TO_DATE(LAST_DAY(:DateFrom),'YYYY-MM-DD');
+
+SELECT SUM(IFNULL("U_ActualStaff",0)) INTO StaffLastYear FROM "@TBL5STAFF" 
+WHERE "U_Month"
+BETWEEN (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY)
+AND ADD_YEARS(:DateFrom,-1);
+
+INSERT INTO TODAYREVENUE
+SELECT B."OcrCode4",B."OcrCode3",B."OcrCode2",B."Credit" AS "TodayCredit",B."Debit" AS "TodayDebit"
+FROM "OJDT" A
+INNER JOIN "JDT1" B ON B."TransId" = A."TransId"
+INNER JOIN "OACT" C ON C."AcctCode" = B."Account" 
+WHERE A."RefDate" = :DateFrom
+AND UPPER(C."ExportCode") = 'YES';
+
+INSERT INTO ACTUALREVENUE
+SELECT B."OcrCode4",B."OcrCode3",B."OcrCode2",B."Credit" AS "ActualCredit",B."Debit" AS "ActualDebit"
+FROM "OJDT" A
+INNER JOIN "JDT1" B ON B."TransId" = A."TransId"
+INNER JOIN "OACT" C ON C."AcctCode" = B."Account" 
+WHERE UPPER(C."ExportCode") = 'YES'
+AND A."RefDate" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) AND A."RefDate" <= :DateFrom;
+
+INSERT INTO BUDGET
+SELECT T1."OcrCode", T1."DimCode", T1."DebLTotal", T1."CredLTotal"
+FROM "OBGT" T0  
+INNER JOIN "BGT2" T1 ON T0."AbsId" = T1."BudgId"
+INNER JOIN "OACT" T2 ON T2."AcctCode" = T0."AcctCode"
+WHERE UPPER(T2."ExportCode") = 'YES'
+AND T0."FinancYear" >= (SELECT TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD') FROM DUMMY) 
+AND T0."FinancYear" <= :DateFrom;
+
+INSERT INTO LASTYEARREVENUE
+SELECT B."OcrCode4",B."OcrCode3",B."OcrCode2",B."Credit" AS "LastYrCredit",B."Debit" AS "LastYrDebit"
+FROM "OJDT" A
+INNER JOIN "JDT1" B ON B."TransId" = A."TransId"
+INNER JOIN "OACT" C ON C."AcctCode" = B."Account" 
+WHERE UPPER(C."ExportCode") = 'YES'
+AND A."RefDate" >= (SELECT ADD_YEARS(TO_DATE(ADD_MONTHS(NEXT_DAY(LAST_DAY(:DateFrom)),-1),'YYYY-MM-DD'),-1) FROM DUMMY) 
+AND A."RefDate" <= ADD_YEARS(:DateFrom,-1);
+						
+SELECT CASE WHEN T0."DimCode" = '4' THEN 1 
+		    WHEN T0."DimCode" = '2' THEN 2 
+		    WHEN T0."DimCode" = '3' THEN 3 END AS "Order",CASE WHEN T0."DimCode" = '4' THEN 'ROOMS' 
+		    WHEN T0."DimCode" = '2' THEN 'FOOD & BEVERAGE' 
+		    WHEN T0."DimCode" = '3' THEN 'OTHERS' END AS "Department",
+		    T0."PrcName",IFNULL(SUM(T1.TodayDebit),0) - IFNULL(SUM(T1.TodayCredit),0) AS "Today",
+		    IFNULL(SUM(T2.ActualDebit),0) - IFNULL(SUM(T2.ActualCredit),0) AS "Actual",
+		    IFNULL(SUM(T3.BudgetDebit),0) - IFNULL(SUM(T3.BudgetCredit),0) AS "Budget",
+		    ((IFNULL(SUM(T2.ActualDebit),0) - IFNULL(SUM(T2.ActualCredit),0)) - (IFNULL(SUM(T3.BudgetDebit),0) - IFNULL(SUM(T3.BudgetCredit),0))) AS "Variance Act Vs Bud",
+		    IFNULL(SUM(T4.LastYrDebit),0) - IFNULL(SUM(T4.LastYrCredit),0) AS "LastYear",
+		    ((IFNULL(SUM(T2.ActualDebit),0) - IFNULL(SUM(T2.ActualCredit),0)) - (IFNULL(SUM(T4.LastYrDebit),0) - IFNULL(SUM(T4.LastYrCredit),0)))  AS "Variance Act Vs LastYear"
+		    ,StaffToday AS "StaffToday",StaffActual AS "StaffActual",StaffBudget AS "StaffBudget",StaffLastYear AS "StaffLastYear",
+		    ABS(StaffActual - StaffBudget) AS "StaffVarActvsBud", ABS(IFNULL(StaffActual,0) - IFNULL(StaffLastYear,0)) AS "Variance Staff ActVsLastYear"
+FROM "OPRC" T0 
+LEFT OUTER JOIN TODAYREVENUE T1 ON (CASE WHEN T0."DimCode" = '4' THEN T1.OcrCode4
+		                           	WHEN T0."DimCode" = '2' THEN T1.OcrCode2
+		                           	WHEN T0."DimCode" = '3' THEN T1.OcrCode3 END) = T0."PrcCode"
+LEFT OUTER JOIN ACTUALREVENUE T2 ON (CASE WHEN T0."DimCode" = '4' THEN T2.OcrCode4
+		                           	 WHEN T0."DimCode" = '2' THEN T2.OcrCode2
+		                           	 WHEN T0."DimCode" = '3' THEN T2.OcrCode3 END) = T0."PrcCode"
+LEFT OUTER JOIN BUDGET T3 ON T3.DimCode = T0."DimCode" AND T3.OcrCode = T0."PrcCode"	
+LEFT OUTER JOIN LASTYEARREVENUE T4 ON (CASE WHEN T0."DimCode" = '4' THEN T4.OcrCode4
+		                           	 WHEN T0."DimCode" = '2' THEN T4.OcrCode2
+		                           	 WHEN T0."DimCode" = '3' THEN T4.OcrCode3 END) = T0."PrcCode"                           	 
+WHERE T0."DimCode" IN('4','3','2')
+GROUP BY T0."DimCode",T0."PrcCode",T0."PrcName"
+ORDER BY 1,T0."PrcName";
+
+DROP TABLE TODAYREVENUE;
+DROP TABLE ACTUALREVENUE;
+DROP TABLE BUDGET;
+DROP TABLE LASTYEARREVENUE;
+
+END
